@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src https://cards.scryfall.io; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<title>Cards for Sale</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div>
+    <h1>Cards for sale</h1>
+    <p class="muted" id="sub"></p>
+  </div>
+  <button id="openList" class="primary">Buylist <span id="badge">0</span></button>
+</header>
+
+<main>
+  <div class="filters">
+    <input id="q" type="search" placeholder="Search cards or sets…" aria-label="Search">
+    <select id="color" aria-label="Color">
+      <option value="">All colors</option>
+      <option value="W">White</option><option value="U">Blue</option><option value="B">Black</option>
+      <option value="R">Red</option><option value="G">Green</option><option value="M">Multicolor</option>
+      <option value="C">Colorless</option><option value="L">Land</option>
+    </select>
+    <select id="finish" aria-label="Finish">
+      <option value="">Foil &amp; non-foil</option>
+      <option value="foil">Foil only</option>
+      <option value="nonfoil">Non-foil only</option>
+    </select>
+    <select id="sort" aria-label="Sort">
+      <option value="color">Sort: Color</option>
+      <option value="pd">Sort: Price high → low</option>
+      <option value="pa">Sort: Price low → high</option>
+      <option value="n">Sort: Name</option>
+      <option value="s">Sort: Set</option>
+    </select>
+    <span class="muted" id="count"></span>
+  </div>
+  <div class="grid" id="grid"></div>
+  <p class="muted empty" id="none" hidden>No cards match those filters.</p>
+</main>
+
+<aside id="panel" aria-label="Buylist">
+  <div class="panel-head">
+    <h2>Your buylist</h2>
+    <button id="closeList" aria-label="Close">✕</button>
+  </div>
+  <ul id="items"></ul>
+  <p class="muted" id="emptyList">Nothing added yet. Tap "Add to buylist" on any card.</p>
+  <label class="muted" for="text">Text to send</label>
+  <textarea id="text" readonly rows="8"></textarea>
+  <div class="panel-foot">
+    <strong id="total">$0.00</strong>
+    <button id="clear">Clear</button>
+    <button id="copy" class="primary">Copy list</button>
+  </div>
+</aside>
+<div id="shade" hidden></div>
+<div id="zoom" hidden><img id="zoomImg" alt=""></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="cards.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
