@@ -1,7 +1,11 @@
 'use strict';
 (() => {
   const DATA = window.CARDS || { cards: [] };
-  const CARDS = DATA.cards.map((c, i) => ({ ...c, key: [c.c, c.k, c.f, c.q].join('|'), idx: i }));
+  const SOLD = new Set(window.SOLD || []);
+  const CARDS = DATA.cards.map((c, i) => {
+    const key = [c.c, c.k, c.f, c.q].join('|');
+    return { ...c, key, idx: i, sold: SOLD.has(key) };
+  });
   const byKey = Object.fromEntries(CARDS.map(c => [c.key, c]));
   const ORDER = { W: 0, U: 1, B: 2, R: 3, G: 4, M: 5, C: 6, L: 7 };
   const STORE = 'buylist-v1';
@@ -12,7 +16,7 @@
   // buylist: { key: qty }, kept in this browser so it survives a refresh
   let list = {};
   try { list = JSON.parse(localStorage.getItem(STORE)) || {}; } catch { list = {}; }
-  for (const k in list) if (!byKey[k]) delete list[k];
+  for (const k in list) if (!byKey[k] || byKey[k].sold) delete list[k];
   const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(list)); } catch {} };
 
   const el = (tag, props = {}, kids = []) => {
@@ -22,8 +26,8 @@
     return n;
   };
 
-  const total = CARDS.reduce((s, c) => s + c.qty, 0);
-  $('sub').textContent = `${total} cards · prices in USD as of ${DATA.asof || ''} · tap a card image to zoom`;
+  const total = CARDS.reduce((s, c) => s + (c.sold ? 0 : c.qty), 0);
+  $('sub').textContent = `${total} cards available · prices in USD as of ${DATA.asof || ''} · tap a card image to zoom`;
 
   function filtered() {
     const q = $('q').value.trim().toLowerCase(), col = $('color').value, fin = $('finish').value, s = $('sort').value;
@@ -33,11 +37,12 @@
       (!q || (c.n + ' ' + c.s + ' ' + c.c).toLowerCase().includes(q)));
     const nm = (a, b) => a.n.localeCompare(b.n);
     const p = c => c.p ?? -1;
-    out.sort(s === 'pd' ? (a, b) => p(b) - p(a) || nm(a, b)
+    const sortFn = s === 'pd' ? (a, b) => p(b) - p(a) || nm(a, b)
       : s === 'pa' ? (a, b) => p(a) - p(b) || nm(a, b)
       : s === 'n' ? nm
       : s === 's' ? (a, b) => a.s.localeCompare(b.s) || nm(a, b)
-      : (a, b) => ORDER[a.g] - ORDER[b.g] || nm(a, b));
+      : (a, b) => ORDER[a.g] - ORDER[b.g] || nm(a, b);
+    out.sort((a, b) => (a.sold - b.sold) || sortFn(a, b)); // sold listings go last
     return out;
   }
 
@@ -48,7 +53,19 @@
     const fin = finishLabel(c.f);
     const name = el('div', { className: 't', textContent: c.n });
     if (fin) name.append(el('span', { className: 'tag', textContent: fin }));
-    const avail = c.qty > 1 ? ` · ${c.qty} available` : '';
+    const avail = c.qty > 1 && !c.sold ? ` · ${c.qty} available` : '';
+    if (c.sold) {
+      return el('div', { className: 'card sold' }, [
+        el('div', { className: 'imgwrap' }, [img, el('span', { className: 'soldmark', textContent: 'SOLD' })]),
+        name,
+        el('div', { className: 'meta', textContent: `${c.s} · #${c.k}` }),
+        el('div', { className: 'row' }, [
+          el('span', { className: 'price', textContent: money(c.p) }),
+          el('span', { className: 'meta', textContent: c.q }),
+        ]),
+        el('button', { className: 'add', textContent: 'Sold', disabled: true }),
+      ]);
+    }
     const btn = el('button', {
       className: 'add' + (inList ? '' : ' primary'),
       textContent: inList ? (inList >= c.qty ? `In buylist (${inList}) ✓` : `In buylist (${inList}) · add 1 more`) : 'Add to buylist',
@@ -72,7 +89,9 @@
     const rows = filtered();
     $('grid').replaceChildren(...rows.map(cardNode));
     $('none').hidden = rows.length > 0;
-    $('count').textContent = rows.length === CARDS.length ? `${rows.length} listings` : `${rows.length} of ${CARDS.length} listings`;
+    const soldShown = rows.filter(c => c.sold).length;
+    $('count').textContent = (rows.length === CARDS.length ? `${rows.length} listings` : `${rows.length} of ${CARDS.length} listings`)
+      + (soldShown ? ` (${soldShown} sold)` : '');
     renderList();
   }
 
