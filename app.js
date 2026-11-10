@@ -2,9 +2,12 @@
 (() => {
   const DATA = window.CARDS || { cards: [] };
   const SOLD = new Set(window.SOLD || []);
+  const OVR = window.OVERRIDES || {};
   const CARDS = DATA.cards.map((c, i) => {
     const key = [c.c, c.k, c.f, c.q].join('|');
-    return { ...c, key, idx: i, sold: SOLD.has(key) };
+    const o = OVR[key] || {};
+    const note = o.note ? String(o.note) : '';
+    return { ...c, p: o.p ?? c.p, note, label: note ? `${c.n} (${note})` : c.n, key, idx: i, sold: SOLD.has(key) };
   });
   const byKey = Object.fromEntries(CARDS.map(c => [c.key, c]));
   const ORDER = { W: 0, U: 1, B: 2, R: 3, G: 4, M: 5, C: 6, L: 7 };
@@ -36,7 +39,7 @@
     const out = CARDS.filter(c =>
       (!col || c.g === col) &&
       (!fin || (fin === 'foil' ? c.f !== 'nonfoil' : c.f === 'nonfoil')) &&
-      (!q || (c.n + ' ' + c.s + ' ' + c.c).toLowerCase().includes(q)));
+      (!q || (c.label + ' ' + c.s + ' ' + c.c).toLowerCase().includes(q)));
     const nm = (a, b) => a.n.localeCompare(b.n);
     const p = c => c.p ?? -1;
     const sortFn = s === 'pd' ? (a, b) => p(b) - p(a) || nm(a, b)
@@ -53,12 +56,12 @@
     const img = el('img', { loading: 'lazy', alt: c.n, src: c.i || '' });
     img.addEventListener('click', () => {
       $('zoomImg').src = (c.i || '').replace('/normal/', '/large/');
-      $('zoomName').textContent = `${c.n} · ${c.s} #${c.k}${finishLabel(c.f) ? ' · ' + finishLabel(c.f) : ''}`;
+      $('zoomName').textContent = `${c.label} · ${c.s} #${c.k}${finishLabel(c.f) ? ' · ' + finishLabel(c.f) : ''}`;
       $('zoomCk').href = ckUrl(c);
       $('zoom').hidden = false;
     });
     const fin = finishLabel(c.f);
-    const name = el('div', { className: 't', textContent: c.n });
+    const name = el('div', { className: 't', textContent: c.label });
     if (fin) name.append(el('span', { className: 'tag', textContent: fin }));
     const avail = c.qty > 1 && !c.sold ? ` · ${c.qty} available` : '';
     if (c.sold) {
@@ -80,7 +83,7 @@
     });
     btn.addEventListener('click', () => {
       if ((list[c.key] || 0) >= c.qty) { openPanel(); return; }
-      list[c.key] = (list[c.key] || 0) + 1; persist(); render(); toast(`Added ${c.n}`);
+      list[c.key] = (list[c.key] || 0) + 1; persist(); render(); toast(`Added ${c.label}`);
     });
     return el('div', { className: 'card' + (inList ? ' in' : '') }, [
       img, name,
@@ -106,7 +109,7 @@
 
   function lineFor(c, n) {
     const fin = finishLabel(c.f);
-    return `${n}x ${c.n} (${c.s} #${c.k}${fin ? ', ' + fin : ''}, ${c.q}) ${money(c.p)}${n > 1 && c.p != null ? ' each' : ''}`;
+    return `${n}x ${c.label} (${c.s} #${c.k}${fin ? ', ' + fin : ''}, ${c.q}) ${money(c.p)}${n > 1 && c.p != null ? ' each' : ''}`;
   }
 
   function renderList() {
@@ -122,7 +125,7 @@
       const fin = finishLabel(c.f);
       return el('li', {}, [
         el('div', { className: 'info' }, [
-          el('div', { textContent: c.n }),
+          el('div', { textContent: c.label }),
           el('div', { className: 'muted', textContent: `${c.s}${fin ? ' · ' + fin : ''} · ${c.q} · ${money(c.p)}` }),
         ]),
         c.qty > 1 ? qty : el('span', { className: 'muted', textContent: '1' }),
