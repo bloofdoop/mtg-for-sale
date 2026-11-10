@@ -11,6 +11,8 @@
   const STORE = 'buylist-v1';
   const $ = id => document.getElementById(id);
   const money = n => n == null ? 'Ask' : '$' + Number(n).toFixed(2);
+  const ckUrl = c => 'https://www.cardkingdom.com/catalog/search?search=header&filter%5Bname%5D=' + encodeURIComponent(c.n);
+  const ckLink = c => el('a', { className: 'ck', href: ckUrl(c), target: '_blank', rel: 'noopener noreferrer', textContent: 'Check on Card Kingdom ↗' });
   const finishLabel = f => f === 'nonfoil' ? '' : f === 'etched' ? 'Etched foil' : 'Foil';
 
   // buylist: { key: qty }, kept in this browser so it survives a refresh
@@ -49,7 +51,12 @@
   function cardNode(c) {
     const inList = list[c.key] || 0;
     const img = el('img', { loading: 'lazy', alt: c.n, src: c.i || '' });
-    img.addEventListener('click', () => { $('zoomImg').src = (c.i || '').replace('/normal/', '/large/'); $('zoom').hidden = false; });
+    img.addEventListener('click', () => {
+      $('zoomImg').src = (c.i || '').replace('/normal/', '/large/');
+      $('zoomName').textContent = `${c.n} · ${c.s} #${c.k}${finishLabel(c.f) ? ' · ' + finishLabel(c.f) : ''}`;
+      $('zoomCk').href = ckUrl(c);
+      $('zoom').hidden = false;
+    });
     const fin = finishLabel(c.f);
     const name = el('div', { className: 't', textContent: c.n });
     if (fin) name.append(el('span', { className: 'tag', textContent: fin }));
@@ -63,6 +70,7 @@
           el('span', { className: 'price', textContent: money(c.p) }),
           el('span', { className: 'meta', textContent: c.q }),
         ]),
+        ckLink(c),
         el('button', { className: 'add', textContent: 'Sold', disabled: true }),
       ]);
     }
@@ -81,6 +89,7 @@
         el('span', { className: 'price', textContent: money(c.p) }),
         el('span', { className: 'meta', textContent: c.q + avail }),
       ]),
+      ckLink(c),
       btn,
     ]);
   }
@@ -137,7 +146,7 @@
   $('openList').addEventListener('click', openPanel);
   $('closeList').addEventListener('click', closePanel);
   $('shade').addEventListener('click', closePanel);
-  $('zoom').addEventListener('click', () => { $('zoom').hidden = true; });
+  $('zoom').addEventListener('click', e => { if (!e.target.closest('a')) $('zoom').hidden = true; });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { closePanel(); $('zoom').hidden = true; } });
   $('clear').addEventListener('click', () => { if (Object.keys(list).length && confirm('Clear your whole buylist?')) { list = {}; persist(); render(); } });
   $('copy').addEventListener('click', async () => {

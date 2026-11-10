@@ -55,7 +55,12 @@ textarea { width:100%; resize:vertical; font-family:ui-monospace, Consolas, mono
 .panel-foot { display:flex; align-items:center; gap:8px; }
 .panel-foot strong { flex:1; font-size:16px; }
 #shade { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:15; }
-#zoom { position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:30; display:flex; align-items:center; justify-content:center; padding:16px; cursor:zoom-out; }
-#zoom img { max-width:100%; max-height:100%; border-radius:14px; }
+#zoom { position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:30; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:16px; cursor:zoom-out; }
+#zoom img { max-width:100%; max-height:calc(100% - 70px); border-radius:14px; }
+.zoom-bar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:center; color:#fff; text-align:center; }
+.ck-btn { background:var(--accent); color:var(--accent-ink); text-decoration:none; padding:8px 14px; border-radius:6px; font-weight:600; cursor:pointer; }
+.card .ck { color:var(--accent); font-size:12px; margin:0 0 6px; text-decoration:none; }
+.card .ck:hover { text-decoration:underline; }
+.card.sold .ck { opacity:1; }
 .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--bg); padding:8px 14px; border-radius:6px; z-index:40; }
 @media (max-width:480px) { .grid { grid-template-columns:repeat(2, 1fr); gap:8px; } }
